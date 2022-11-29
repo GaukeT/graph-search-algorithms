@@ -1,3 +1,7 @@
+html, body, .main {
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 3vw;
+}
 
 .data-div {
     display: flex;

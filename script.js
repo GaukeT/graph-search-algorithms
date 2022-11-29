@@ -12,12 +12,66 @@ var inputTo = root.querySelector(".input-to");
 var dataFieldBefore = root.querySelector(".data-field-before");
 var dataFieldAfter = root.querySelector(".data-field-after");
 
+var rawSrcOptions = [];
+var rawDestOptions = [];
+var rawData = {};
+
+// facts
+var totalSrcField = root.querySelector(".total-src");
+var totalDestField = root.querySelector(".total-dest");
+var routesCountField = root.querySelector(".total-routes");
+var routesCheckedField = root.querySelector(".routes-checked");
+var routesCount = 0;
+
+
+// init data
+fetch("./routes.json")
+    .then(response => {
+        return response.json();
+    })
+    .then(data => {
+        routesCountField.textContent = data.length;
+        routesCount = data.length;
+        for (let i = 0; i < data.length; i++) {
+            addNode(data[i]);
+        }
+        setOptions();
+        dataFieldBefore.textContent = "data fetched! \n" +  JSON.stringify(rawData, undefined, 4);
+        console.log("data fetched!")
+    })
+    .catch(err => {
+        console.log(err)
+    });
+
+function addNode(route) {
+    var src = route["Source airport"];
+    var dest = route["Destination airport"];
+
+    rawSrcOptions.push(src);
+    rawDestOptions.push(dest);
+
+    var node = rawData[src];
+    if (!node) {
+        rawData[src] = new Node(src);
+        node = rawData[src];
+    }
+    
+    if (!node.edges[dest]) {
+        node.edges.push(dest);
+    }
+
+    node = rawData[dest];
+    if (!node) {
+        rawData[dest] = new Node(dest);
+    }
+}
+
 run.addEventListener("click", () => {
     bfs();
 });
 
 class Node {
-    constructor(value, edges) {
+    constructor(value, edges = []) {
         this.value = value
         this.parent = null;
         this.edges = edges;
@@ -25,13 +79,12 @@ class Node {
     }
 }
 
-// init
-dataFieldBefore.textContent = JSON.stringify(getData(), undefined, 4);
-setOptions();
-
 function bfs() {
+    var routesChecked = 0;
     var path = false;
     var data = getData();
+    dataFieldBefore.textContent = JSON.stringify(data, undefined, 4);
+
     var queue = [];
 
     var start = data[inputFrom.value];
@@ -42,9 +95,10 @@ function bfs() {
 
     while (queue.length > 0) {
         var current = queue.shift();
+        routesChecked++;
         if (current.value === end.value) {
             path = true;
-            var bt = backtrack(current);
+            var bt = backtrack(data, current);
             var r = "";
 
             for (let i = bt.length - 1; i >= 0; i--) {
@@ -52,17 +106,16 @@ function bfs() {
             }
     
             result.textContent = r.substring(0, r.length-3);
-            
+            routesCheckedField.textContent = routesChecked + " (" + parseFloat(routesChecked / routesCount * 100).toFixed(2) + "%)";
             break;
         }
 
-        var edges = current.edges;
-
-        for (let index = 0; index < edges.length; index++) {
-            var neighbor = data[edges[index]];
+        for (const edge of current.edges) {
+            var neighbor = data[edge];
+            
             if (!neighbor.searched) {
                 neighbor.searched = true;
-                neighbor.parent = current;
+                neighbor.parent = current.value;
                 queue.push(neighbor);
             }
         }
@@ -73,43 +126,33 @@ function bfs() {
     if (!path) {
         result.textContent = "No path from " + start.value + " to " + end.value;
     }
-    console.log('done!');
-
-    // reset
-    console.log(queue.length);
-    queue = [];
 }
 
-function backtrack(current, path = []) {
+function backtrack(data, current, path = []) {
     path.push(current.value);
     if (current.parent !== null) {
-        return backtrack(current.parent, path);
+        return backtrack(data, data[current.parent], path);
     } else {
         return path;
     }
 }
 
 function getData() {
-    return {
-        'AMS': new Node('AMS', ['BON', 'SAN']),
-        'BON': new Node('BON', ['AMS', 'DHR']),
-        'DHR': new Node('DHR', ['EIN', 'EUX']),
-        'EIN': new Node('EIN', ['SAN', 'GRQ']),
-        'ENS': new Node('ENS', ['AMS', 'DHR']),
-        'GRQ': new Node('GRQ', ['BON', 'ENS']),
-        'LEY': new Node('LEY', ['RTM', 'GRQ']),
-        'RTM': new Node('RTM', ['EIN', 'DHR']),
-        'SAN': new Node('SAN', ['AMS', 'EUX']),
-        'EUX': new Node('EUX', ['RTM', 'ENS'])
-    }
+    return JSON.parse(JSON.stringify(rawData));
 }
 
 function setOptions() {
-    var data = Object.keys(getData());
-    data.sort();
-    for (let i = 0; i < data.length; i++) {
-        const option = data[i];
-        inputFrom.options[inputFrom.options.length] = new Option(option, option);
-        inputTo.options[inputTo.options.length] = new Option(option, option);    
+    rawSrcOptions.sort();
+    addOptions(totalSrcField, rawSrcOptions, inputFrom);
+    
+    rawDestOptions.sort();
+    addOptions(totalDestField, rawDestOptions, inputTo);
+}
+
+function addOptions(field, airports, select) {
+    var options = new Set(airports);
+    field.textContent = options.size;
+    for (const option of options.values()) {
+        select.options[select.options.length] = new Option(option, option);    
     }
 }
