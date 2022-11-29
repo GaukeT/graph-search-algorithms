@@ -106,6 +106,7 @@ function getData() {
 
 function setOptions() {
     var data = Object.keys(getData());
+    data.sort();
     for (let i = 0; i < data.length; i++) {
         const option = data[i];
         inputFrom.options[inputFrom.options.length] = new Option(option, option);
