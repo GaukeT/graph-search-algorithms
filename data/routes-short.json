@@ -1,0 +1,90 @@
+[
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "AER",
+      "Source airport ID": 2965,
+      "Destination airport": "KZN",
+      "Destination airport ID": 2990,
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    },
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "ASF",
+      "Source airport ID": 2966,
+      "Destination airport": "KZN",
+      "Destination airport ID": 2990,
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    },
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "ASF",
+      "Source airport ID": 2966,
+      "Destination airport": "MRV",
+      "Destination airport ID": 2962,
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    },
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "CEK",
+      "Source airport ID": 2968,
+      "Destination airport": "KZN",
+      "Destination airport ID": 2990,
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    },
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "CEK",
+      "Source airport ID": 2968,
+      "Destination airport": "OVB",
+      "Destination airport ID": 4078,
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    },
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "DME",
+      "Source airport ID": 4029,
+      "Destination airport": "KZN",
+      "Destination airport ID": 2990,
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    },
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "DME",
+      "Source airport ID": 4029,
+      "Destination airport": "NBC",
+      "Destination airport ID": 6969,
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    },
+    {
+      "Airline": "2B",
+      "Airline ID": 410,
+      "Source airport": "DME",
+      "Source airport ID": 4029,
+      "Destination airport": "TGK",
+      "Destination airport ID": "\\N",
+      "Codeshare": "",
+      "Stops": 0,
+      "Equipment": "CR2"
+    }
+  ]
