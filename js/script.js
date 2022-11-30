@@ -20,6 +20,7 @@ var rawData = {};
 var rawAirportData = {};
 
 // facts
+var totalAirportsField = root.querySelector(".total-airports");
 var totalSrcField = root.querySelector(".total-src");
 var totalDestField = root.querySelector(".total-dest");
 var routesCountField = root.querySelector(".total-routes");
@@ -28,59 +29,73 @@ var routesCheckedField = root.querySelector(".routes-checked");
 var routesCount = 0;
 
 // init data
-fetch("./data/airports.json") 
+fetch("./data/airports-ext.json") 
     .then(response => {
         return response.json();
     })
     .then(data => {
         rawAirportData = data;
-        console.log("airport data fetched!", Object.keys(data).length);
+        totalAirportsField.textContent = Object.keys(data).length;
+
+        // add every airport as node in graph
+        for (const airport of Object.keys(rawAirportData)) {
+            const value = rawAirportData[airport].IATA;
+            rawData[value] = new Node(airport, value)
+        }
+
+        console.log("airport data fetched!");
     })
+    .then(() => addRoutes())
     .catch(err => {
         console.log(err);
     });
 
-fetch("./data/routes.json")
-    .then(response => {
-        return response.json();
-    })
-    .then(data => {
-        routesCountField.textContent = data.length;
-        routesCount = data.length;
-        for (let i = 0; i < data.length; i++) {
-            addNode(data[i]);
-        }
-        setOptions();
-        dataFieldBefore.textContent = JSON.stringify(rawData, undefined, 4);
-        console.log("route data fetched!");
-    })
-    .catch(err => {
-        console.log(err);
-    });
+function addRoutes() {    
+    fetch("./data/routes.json")
+        .then(response => {
+            return response.json();
+        })
+        .then(data => {
+            for (let i = 0; i < data.length; i++) {
+                addNode(data[i]);
+            }
+            setOptions();
+            routesCount += data.length;
+            routesCountField.textContent = routesCount;
+            dataFieldBefore.textContent = JSON.stringify(rawData, undefined, 4);
+            console.log("route data fetched!");
+        })
+        .catch(err => {
+            console.log(err);
+            throw err;
+        });
+}
 
 function addNode(route) {
     var src = route["Source airport"];
-    var srcId = route["Source airport ID"]
     var dest = route["Destination airport"];
-    var destId = route["Destination airport ID"]
-
-    rawSrcOptions.push(src);
-    rawDestOptions.push(dest);
 
     var node = rawData[src];
+    // unknown source airport
     if (!node) {
-        rawData[src] = new Node(srcId, src);
-        node = rawData[src];
+        routesCount--;
+        return;
     }
-    
+
+    // add dest to airports edges
     if (!node.edges[dest]) {
+        var destNode = rawData[dest];
+        // unknown destination airport
+        if (!destNode) {
+            routesCount--;
+            return;
+        }
         node.edges.push(dest);
     }
 
-    node = rawData[dest];
-    if (!node) {
-        rawData[dest] = new Node(destId, dest);
-    }
+    // add options to chooce from
+    rawSrcOptions.push(src);
+    rawDestOptions.push(dest);
 }
 
 run.addEventListener("click", () => {
@@ -110,7 +125,7 @@ function bfs() {
             var r = "";
 
             for (let i = bt.length - 1; i >= 0; i--) {
-                r += bt[i] + " > ";
+                r += bt[i] + " > \n";
             }
     
             result.textContent = r.substring(0, r.length-3);
@@ -120,7 +135,7 @@ function bfs() {
 
         for (const edge of current.edges) {
             var neighbor = data[edge];
-            
+
             if (!neighbor.searched) {
                 neighbor.searched = true;
                 neighbor.parent = current.value;
@@ -136,28 +151,18 @@ function bfs() {
     }
 }
 
-function backtrack(data, current, path = [], dist = 0, trueDistance = true) {
+function backtrack(data, current, path = [], dist = 0) {
     var currentAirport = rawAirportData[current.airportId];
-
-    if (currentAirport) {
-        path.push(current.value + " (" + currentAirport.City + ") ");
-    } else {
-        path.push(current.value);
-    }
+    path.push(current.value + " (" + currentAirport.City + " / " + currentAirport.Country + ")");
     
     if (current.parent !== null) {
         var parent = data[current.parent];
         var parentAirport = rawAirportData[parent.airportId];
         
-        if (currentAirport && parentAirport) {
-            dist += calculateDistance(currentAirport.Longitude, currentAirport.Latitude, parentAirport.Longitude, parentAirport.Latitude);
-            return backtrack(data, parent, path, dist, trueDistance);
-        } else {
-            return backtrack(data, parent, path, dist, false);
-        }
+        dist += calculateDistance(currentAirport.Longitude, currentAirport.Latitude, parentAirport.Longitude, parentAirport.Latitude);
+        return backtrack(data, parent, path, dist);
     } else {
-        var x = trueDistance ? "" : "<strong> __missing-airport-data__ </strong>"
-        TotalDistanceField.innerHTML = parseFloat(dist).toFixed(2) + "KM" + x ;
+        TotalDistanceField.innerHTML = parseFloat(dist).toFixed(2) + " KM" ;
         return path;
     }
 }
@@ -200,6 +205,7 @@ function setOptions() {
     var destOptions = new Set(rawDestOptions);
 
     totalSrcField.textContent = srcOptions.size;
+
     for (const option of srcOptions.values()) {
         var isDestOption = destOptions.has(option) ? "" : " *";
         inputFrom.options[inputFrom.options.length] = new Option(option + isDestOption, option);    
