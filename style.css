@@ -3,6 +3,8 @@ html, body, .main {
 }
 
 .data-div {
+    visibility: hidden;
+
     display: flex;
     gap: 8px;
 }
@@ -19,4 +21,4 @@ select {
     margin-right: 8px;
 }
 
-    
+#map { height: 630px; }
