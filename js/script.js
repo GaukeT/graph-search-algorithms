@@ -28,6 +28,15 @@ var TotalDistanceField = root.querySelector(".total-distance");
 var routesCheckedField = root.querySelector(".routes-checked");
 var routesCount = 0;
 
+// map
+var map = L.map('map').setView([52.308601, 4.76389], 3);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+
+var markers = L.markerClusterGroup();
+
 // init data
 fetch("./data/airports-ext.json") 
     .then(response => {
@@ -38,9 +47,11 @@ fetch("./data/airports-ext.json")
         totalAirportsField.textContent = Object.keys(data).length;
 
         // add every airport as node in graph
-        for (const airport of Object.keys(rawAirportData)) {
-            const value = rawAirportData[airport].IATA;
-            rawData[value] = new Node(airport, value)
+        for (const airportKey of Object.keys(rawAirportData)) {
+            const airport = rawAirportData[airportKey];
+
+            const value = airport.IATA;
+            rawData[value] = new Node(airportKey, value)
         }
 
         console.log("airport data fetched!");
@@ -99,6 +110,7 @@ function addNode(route) {
 }
 
 run.addEventListener("click", () => {
+    markers.clearLayers();
     bfs();
 });
 
@@ -154,14 +166,32 @@ function bfs() {
 function backtrack(data, current, path = [], dist = 0) {
     var currentAirport = rawAirportData[current.airportId];
     path.push(current.value + " (" + currentAirport.City + " / " + currentAirport.Country + ")");
+
+    var circle = L.circle([currentAirport.Latitude, currentAirport.Longitude], {
+        color: 'red',
+        fillColor: '#f03',
+        fillOpacity: 1,
+        radius: 300
+    })
+    .bindTooltip(currentAirport.IATA)
+    .openTooltip();
+    markers.addLayer(circle);
     
     if (current.parent !== null) {
         var parent = data[current.parent];
         var parentAirport = rawAirportData[parent.airportId];
         
         dist += calculateDistance(currentAirport.Longitude, currentAirport.Latitude, parentAirport.Longitude, parentAirport.Latitude);
+
+        var route = L.polygon([
+            [currentAirport.Latitude, currentAirport.Longitude],
+            [parentAirport.Latitude, parentAirport.Longitude]
+        ]);
+        markers.addLayer(route);
+
         return backtrack(data, parent, path, dist);
     } else {
+        map.addLayer(markers);
         TotalDistanceField.innerHTML = parseFloat(dist).toFixed(2) + " KM" ;
         return path;
     }
